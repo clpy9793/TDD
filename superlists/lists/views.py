@@ -1,8 +1,9 @@
 from lists.models import Item,List
+from lists.forms import ItemForm
 from django.http import HttpResponse
 from django.shortcuts import render,redirect
 from django.core.exceptions import ValidationError
-
+from django.template.loader import render_to_string
 
 
 
@@ -10,11 +11,7 @@ from django.core.exceptions import ValidationError
 
 
 def home_page(request):
-    error = None
-    if request.method == 'POST':
-        if request.POST['item_text'] == '\n':
-            error = "You can't have an empty list item"
-    return render(request,'home.html',{'error':error})
+    return render(request,'home.html',{'form':ItemForm()})
 
 def view_list(request,list_id):
     list_ = List.objects.get(id=list_id)

@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 
 from lists.views import home_page
 from lists.models import Item,List
+from lists.forms import ItemForm
 
 
 
@@ -14,22 +15,24 @@ from lists.models import Item,List
 
 
 class HomePageTest(TestCase):
-
-
-    def test_root_url_resolves_to_home_page_view(self):
-        '/指向home_page'
-        found = resolve('/')
-        self.assertEqual(found.func,home_page)
+    '首页'
+    maxDiff = None
         
-    def test_home_page_returns_correct_html(self):
-        ''
-        request = HttpRequest()
-        request.POST['item_text']= ''
-        response = home_page(request)
-        expected_html = render_to_string('home.html',{'new_item_text':request.POST.get('item_text','')})
+    def test_home_page_renders_home_template(self):        
+        '确认首页是否使用模板'
+        response = self.client.get('/')
+        self.assertTemplateUsed(response,'home.html')
 
-        # self.assertEqual(response.content.decode(),expected_html)
-    
+    def test_home_page_user_item_form(self):
+        '确认视图是否使用了正确的表单类'
+        response = self.client.get('/')        
+        self.assertIsInstance(response.context['form'],ItemForm)
+
+
+
+
+
+
     
 class NewListTest(TestCase):
 
