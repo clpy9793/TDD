@@ -28,7 +28,7 @@ class NewVisitorTest(FunctionalTest):
         self.assertIn('To-Do',head_text)
         
         #代办事项
-        input_box = self.browser.find_element_by_id('id_new_item')
+        input_box = self.get_item_input_box()
         self.assertEqual(
                 input_box.get_attribute('placeholder'),
                 'Enter a to-do item'
@@ -47,7 +47,7 @@ class NewVisitorTest(FunctionalTest):
         self.check_for_row_in_list_table("1: Buy peacock feathers")        
 
         #第二次更新
-        input_box = self.browser.find_element_by_id('id_new_item')
+        input_box = self.get_item_input_box()
         input_box.send_keys('Use peacock feathers to make a fly')
         input_box.send_keys(Keys.ENTER)
 
@@ -68,7 +68,7 @@ class NewVisitorTest(FunctionalTest):
         self.assertNotIn('make a fly',page_text)
 
         #用户输入一个待办事项
-        input_box = self.browser.find_element_by_id('id_new_item')
+        input_box = self.get_item_input_box()
         self.assertEqual(
                 input_box.get_attribute('placeholder'),
                 'Enter a to-do item'
