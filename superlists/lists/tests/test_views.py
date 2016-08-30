@@ -1,7 +1,9 @@
 from django.test import TestCase
+
+from django.http import HttpRequest
+from django.utils.html import escape
 from django.core.urlresolvers import resolve
 from django.template.loader import render_to_string
-from django.http import HttpRequest
 
 from lists.views import home_page
 from lists.models import Item,List
@@ -26,42 +28,7 @@ class HomePageTest(TestCase):
 
         # self.assertEqual(expected_html,response.content.decode())
     
-    def test_home_page_only_saves_items_when_necessary(self):
-        request = HttpRequest()
-        home_page(request)
-        self.assertEqual(Item.objects.count(), 0) 
-
-
-
-class ListModelTest(TestCase):
-
-
-    def test_saving_and_retrieving_items(self):
-        list_ = List()
-        list_.save()
-
-        first_item = Item()
-        first_item.text = 'The first (ever) list item'
-        first_item.list = list_
-        first_item.save()
-
-        second_item = Item()
-        second_item.text = 'Item the second'
-        second_item.list = list_
-        second_item.save()
-
-        saved_list = List.objects.first()
-        self.assertEqual(saved_list,list_)
-
-        saved_items = Item.objects.all()
-        self.assertEqual(saved_items.count(),2)
-
-        first_saved_item = saved_items[0]
-        second_saved_item = saved_items[1]
-        self.assertEqual(first_saved_item.text,'The first (ever) list item')
-        self.assertEqual(second_saved_item.text,'Item the second')
-        self.assertEqual(first_saved_item.list,list_)
-        self.assertEqual(second_saved_item.list,list_)
+    
 
 
 
@@ -105,7 +72,58 @@ class NewListTest(TestCase):
         self.assertRedirects(response,'/lists/%d/'%(correct_list.id))
 
 
+    def test_validation_errors_are_sent_back_to_home_page_template(self):
+        '提交空事项返回错误'
+        response = self.client.post('/lists/new',data={'item_text':''})
+        self.assertEqual(response.status_code,200)
+        self.assertTemplateUsed(response,'home.html')
+        expected_error = escape("You can't have an empty list item")
+        self.assertContains(response,expected_error)
+    
 
+
+
+class ListViewTest():
+
+
+    def test_use_list_template(self):
+        list_ = List.objects.create()
+        response = self.client.get('/lists/%d/'%(list_.id,))
+        self.assertTemplateUsed(response,'list.html')
+
+    def test_passes_correct_list_to_template(self):
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
+        response = self.client.get('/lists/%d/'%correct_list.id)
+        self.assertEqual(response.context['list'],correct_list)
+     
+
+    def test_saving_and_retrieving_items(self):
+        list_ = List()
+        list_.save()
+
+        first_item = Item()
+        first_item.text = 'The first (ever) list item'
+        first_item.list = list_
+        first_item.save()
+
+        second_item = Item()
+        second_item.text = 'Item the second'
+        second_item.list = list_
+        second_item.save()
+
+        saved_list = List.objects.first()
+        self.assertEqual(saved_list,list_)
+
+        saved_items = Item.objects.all()
+        self.assertEqual(saved_items.count(),2)
+
+        first_saved_item = saved_items[0]
+        second_saved_item = saved_items[1]
+        self.assertEqual(first_saved_item.text,'The first (ever) list item')
+        self.assertEqual(second_saved_item.text,'Item the second')
+        self.assertEqual(first_saved_item.list,list_)
+        self.assertEqual(second_saved_item.list,list_)
 
 
 

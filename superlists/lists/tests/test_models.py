@@ -1,8 +1,10 @@
 from lists.models import Item,List
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 
 
-class ListViewTest(TestCase):
+
+class ListAndItemModelTest(TestCase):
 
     def test_display_only_items_for_that_list(self):
         current_list = List.objects.create()
@@ -20,14 +22,9 @@ class ListViewTest(TestCase):
         self.assertNotContains(response,'other list item 1')
         self.assertNotContains(response,'other list item 2')
 
-    def test_use_list_template(self):
+    def test_cannot_save_empty_list_items(self):
         list_ = List.objects.create()
-        response = self.client.get('/lists/%d/'%(list_.id,))
-        self.assertTemplateUsed(response,'list.html')
-
-    def test_passes_correct_list_to_template(self):
-        other_list = List.objects.create()
-        correct_list = List.objects.create()
-        response = self.client.get('/lists/%d/'%correct_list.id)
-        self.assertEqual(response.context['list'],correct_list)
-     
+        item = Item.objects.create(text='',list=list_)
+        with self.assertRaises(ValidationError):
+            item.save()
+            item.full_clean()
