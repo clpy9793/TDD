@@ -31,4 +31,4 @@ def new_list(request):
         error = "You can't have an empty list item"
         return render(request,'home.html',{'error':error})
     
-    return redirect('/lists/%d/'%(list_.id,))
+    return redirect('view_list',list_.id)
