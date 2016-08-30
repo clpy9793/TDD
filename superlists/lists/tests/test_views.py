@@ -17,43 +17,44 @@ class HomePageTest(TestCase):
 
 
     def test_root_url_resolves_to_home_page_view(self):
+        '/指向home_page'
         found = resolve('/')
         self.assertEqual(found.func,home_page)
         
     def test_home_page_returns_correct_html(self):
+        ''
         request = HttpRequest()
         request.POST['item_text']= ''
         response = home_page(request)
         expected_html = render_to_string('home.html',{'new_item_text':request.POST.get('item_text','')})
 
-        # self.assertEqual(expected_html,response.content.decode())
+        # self.assertEqual(response.content.decode(),expected_html)
     
     
-
-
-
-
-
 class NewListTest(TestCase):
 
 
     def test_saving_a_POST_request(self):
+        'POST请求提交的数据能正确存储'
         self.client.post('/lists/new',data={'item_text':'A new list item'})
         self.assertEqual(Item.objects.count(),1)
         new_item = Item.objects.first()
         self.assertEqual(new_item.text,'A new list item')
     
     def test_redirects_after_POST(self):
+        '指向/lists/new的请求能重定向到/lists/%d/'
+
         response = self.client.post('/lists/new',data={'item_text':'A new list item'})
         new_list = List.objects.first()
         self.assertRedirects(response,'/lists/%d/'%(new_list.id))
 
     def test_can_save_a_POST_request_to_an_existing_list(self):
+        'post请求提交后 Item与List的关联正确'
         other_lsit = List.objects.create()
         correct_list = List.objects.create()
 
         self.client.post(
-            '/lists/%d/add_item'%(correct_list.id,),
+            '/lists/%d/'%(correct_list.id,),
             data={'item_text':'A new item for an existing list'}            
         )
         self.assertEqual(Item.objects.count(),1)
@@ -62,11 +63,12 @@ class NewListTest(TestCase):
         self.assertEqual(new_item.list,correct_list)
 
     def test_redirects_to_list_view(self):
+        '指向/lists/%d/的请求回重定向当当前页面'
         other_lsit = List.objects.create()
         correct_list = List.objects.create()
 
         response = self.client.post(
-            '/lists/%d/add_item'%(correct_list.id),
+            '/lists/%d/'%(correct_list.id),
             data={'item_text':'A new item for an existing list'}            
         )
         self.assertRedirects(response,'/lists/%d/'%(correct_list.id))
