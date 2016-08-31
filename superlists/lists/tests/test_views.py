@@ -20,6 +20,7 @@ class HomePageTest(TestCase):
     '首页测试'
     maxDiff = None
         
+
     def test_home_page_renders_home_template(self):        
         '确认首页是否使用模板'
         response = self.client.get('/')
@@ -31,14 +32,10 @@ class HomePageTest(TestCase):
         self.assertIsInstance(response.context['form'],ItemForm)
 
 
-
-
-
-
     
 class NewListTest(TestCase):
     '先建待办清单测试'
-
+    
 
     def test_saving_a_POST_request(self):
         'POST请求提交的数据能正确存储'
@@ -88,7 +85,6 @@ class NewListTest(TestCase):
         expected_error = escape("You can't have an empty list item")
         self.assertContains(response,expected_error)
     
-
     def test_invalid_list_item_arent_saved(self):
         '提交无效的事项 无法通过验证时不保存'
         self.client.post('/lists/new',data={'text':''})
@@ -113,16 +109,22 @@ class NewListTest(TestCase):
 
 
 
-
-class ListViewTest():
+class ListViewTest(TestCase):
     '待办清单测试'
 
 
-    def test_use_list_template(self):
-        '测试待办清单页面由指定模板生成'        
-        list_ = List.objects.create()
-        response = self.client.get('/lists/%d/'%(list_.id,))
-        self.assertTemplateUsed(response,'list.html')
+    def test_for_invalid_input_nothing_saved_to_db(self):
+        '测试无效提交  不会保存到数据库'
+        self.post_invalid_input()
+        self.assertEqual(Item.objects.count(),0)
+
+    def test_for_invalid_input_renders_list_template(self):
+        '测试无效提交是否返回指定的模板和状态码'
+        'Code:200'
+        'Template:list.htlm'
+        response = self.post_invalid_input()
+        self.assertEqual(response.status_code,200)
+        self.assertTemplateUsed(response,'list.html')        
 
     def test_passes_correct_list_to_template(self):
         '测试list页面请求与返回一致'
@@ -161,8 +163,18 @@ class ListViewTest():
         self.assertEqual(second_saved_item.list,list_)
 
 
+    def test_diplays_item_form(self):
+        '测试GET请求返回结果包含指定的表单和name'
+        list_ = List.objects.create()
+        response = self.client.get('/lists/%d/'%(list_.id,))
+        self.assertIsInstance(response.context['form'],ItemForm)
+        self.assertContains(response,'name="text"')
 
 
+    def post_invalid_input(self):
+        '辅助测试 提交无效表单'
+        list_ = List.objects.create()
+        return self.client.post('/lists/%d/'%(list_.id,),data={'text':''})
 
 
 

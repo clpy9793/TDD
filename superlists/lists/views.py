@@ -16,10 +16,13 @@ def home_page(request):
 def view_list(request,list_id):
     '同时处理GET和POST请求'
     list_ = List.objects.get(id=list_id)
+    form = ItemForm()
     if request.method == 'POST':
-        Item.objects.create(text=request.POST['text'],list=list_)
-        return redirect('/lists/%d/'%(list_.id,))
-    return render(request,'list.html',{'list':list_})
+        form = ItemForm(data=request.POST)
+        if form.is_valid():
+            Item.objects.create(text=request.POST['text'],list=list_)
+            return redirect('/lists/%d/'%(list_.id,))
+    return render(request,'list.html',{'list':list_,'form':form})
 
 def new_list(request):
     form = ItemForm(data=request.POST)
