@@ -14,6 +14,7 @@ def home_page(request):
     return render(request,'home.html',{'form':ItemForm()})
 
 def view_list(request,list_id):
+    '同时处理GET和POST请求'
     list_ = List.objects.get(id=list_id)
     if request.method == 'POST':
         Item.objects.create(text=request.POST['text'],list=list_)
@@ -21,16 +22,11 @@ def view_list(request,list_id):
     return render(request,'list.html',{'list':list_})
 
 def new_list(request):
-    list_ = List.objects.create()
-    item_text = request.POST['text']
-    item = Item(text=item_text,list=list_)
-    error = None
-    try:
-        item.full_clean()
-        item.save()
-    except ValidationError as e:
-        list_.delete()
-        error = "You can't have an empty list item"
-        return render(request,'home.html',{'error':error})
-    
-    return redirect('view_list',list_.id)
+    form = ItemForm(data=request.POST)
+    if form.is_valid():
+        list_ = List.objects.create()
+
+        form.save(for_list=list_)
+        return redirect(list_)
+    else:        
+        return render(request,'home.html',{'form':form})

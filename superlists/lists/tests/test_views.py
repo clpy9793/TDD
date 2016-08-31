@@ -13,9 +13,11 @@ from lists.forms import ItemForm
 
 # Create your tests here.
 
+EMPTY_LIST_ERROR = "You can't have an empty list item"
+
 
 class HomePageTest(TestCase):
-    '首页'
+    '首页测试'
     maxDiff = None
         
     def test_home_page_renders_home_template(self):        
@@ -35,6 +37,7 @@ class HomePageTest(TestCase):
 
     
 class NewListTest(TestCase):
+    '先建待办清单测试'
 
 
     def test_saving_a_POST_request(self):
@@ -66,7 +69,7 @@ class NewListTest(TestCase):
         self.assertEqual(new_item.list,correct_list)
 
     def test_redirects_to_list_view(self):
-        '指向/lists/%d/的请求回重定向当当前页面'
+        '指向/lists/xx/的请求回重定向当当前页面'
         other_lsit = List.objects.create()
         correct_list = List.objects.create()
 
@@ -78,7 +81,7 @@ class NewListTest(TestCase):
 
 
     def test_validation_errors_are_sent_back_to_home_page_template(self):
-        '提交空事项返回错误'
+        '提交空事项应返回错误'        
         response = self.client.post('/lists/new',data={'text':''})
         self.assertEqual(response.status_code,200)
         self.assertTemplateUsed(response,'home.html')
@@ -87,20 +90,42 @@ class NewListTest(TestCase):
     
 
     def test_invalid_list_item_arent_saved(self):
+        '提交无效的事项 无法通过验证时不保存'
         self.client.post('/lists/new',data={'text':''})
         self.assertEqual(Item.objects.count(),0)
         self.assertEqual(List.objects.count(),0)
 
+    def test_for_invalid_input_renders_home_template(self):
+        '测试提交无效表单时返回的页面是否使用了模板'
+        response = self.client.post('/lists/new',data={'text':''})
+        self.assertEqual(response.status_code,200)
+        self.assertTemplateUsed(response,'home.html')
+
+    def test_validation_errors_are_shown_on_home_page(self):
+        '测试提交无效表单时,返回的页面带有错误提示'
+        response = self.client.post('/lists/new',{'text':''})
+        self.assertContains(response,escape(EMPTY_LIST_ERROR))
+
+    def test_for_invalid_input_passes_form_to_template(self):
+        '测试提交无效表单时返回的页面中的表单由指定的表单类生成'
+        response = self.client.post('/lists/new',{'text':''})
+        self.assertIsInstance(response.context['form'],ItemForm)
+
+
+
 
 class ListViewTest():
+    '待办清单测试'
 
 
     def test_use_list_template(self):
+        '测试待办清单页面由指定模板生成'        
         list_ = List.objects.create()
         response = self.client.get('/lists/%d/'%(list_.id,))
         self.assertTemplateUsed(response,'list.html')
 
     def test_passes_correct_list_to_template(self):
+        '测试list页面请求与返回一致'
         other_list = List.objects.create()
         correct_list = List.objects.create()
         response = self.client.get('/lists/%d/'%correct_list.id)
@@ -108,6 +133,7 @@ class ListViewTest():
      
 
     def test_saving_and_retrieving_items(self):
+        '测试List和Item能正确保存以及正确的关联性'
         list_ = List()
         list_.save()
 
