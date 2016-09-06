@@ -12,6 +12,15 @@ class List(models.Model):
 
 class Item(models.Model):
     text = models.TextField(default='')
-    list = models.ForeignKey(List,default=None,null=True)
+    list = models.ForeignKey(List,default=None)
+
+    def __str__(self):
+        return self.text
+
+
+    class Meta:
+        #约束  list和text的组合必须唯一
+        unique_together = ('list','text')
+        ordering = ('id',)
 
 
